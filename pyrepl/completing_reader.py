@@ -108,11 +108,7 @@ class complete(commands.Command):
     def do(self):
         r = self.reader
         stem = r.get_stem()
-        if r.last_command_is(self.__class__):
-            completions = r.cmpltn_menu_choices
-        else:
-            r.cmpltn_menu_choices = completions = \
-                                        r.get_completions(stem)
+        r.cmpltn_menu_choices = completions = r.get_completions(stem)
         if len(completions) == 0:
             r.error("no matches")
         elif len(completions) == 1:
