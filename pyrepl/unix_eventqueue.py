@@ -44,6 +44,11 @@ _keynames = {
     "up" : "kcuu1",
     }
 
+_ad_hoc_codes = {
+    "\x1b[1;5D": "c-left",
+    "\x1b[1;5C": "c-right",
+    }
+
 class EventQueue(object):
     def __init__(self, fd):
         our_keycodes = {}
@@ -52,6 +57,7 @@ class EventQueue(object):
             if keycode:
                 our_keycodes[keycode] = unicode(key)
         our_keycodes[tcgetattr(fd)[6][VERASE]] = u'backspace'
+        our_keycodes.update(_ad_hoc_codes)
         self.k = self.ck = keymap.compile_keymap(our_keycodes)
         self.events = []
         self.buf = []

@@ -145,6 +145,8 @@ default_keymap = tuple(
      (r'\<down>', 'down'),
      (r'\<left>', 'left'),
      (r'\<right>', 'right'),
+     (r'\<c-left>', 'backward-word'),
+     (r'\<c-right>', 'forward-word'),
      (r'\<insert>', 'quoted-insert'),
      (r'\<delete>', 'delete'),
      (r'\<backspace>', 'backspace'),

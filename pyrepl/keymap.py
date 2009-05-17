@@ -88,6 +88,8 @@ _keynames = {
     'space':     ' ',
     'tab':       '\t',
     'up':        'up',
+    'c-left':    'c-left',
+    'c-right':   'c-right',
     }
 
 class KeySpecError(Exception):
