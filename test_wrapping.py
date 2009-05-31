@@ -23,23 +23,38 @@ import pyrepl.unix_console
 
 class TestWrappingLongLines(unittest.TestCase):
 
-    def test_wrapping(self):
+    def make_example_reader(self):
         console = pyrepl.unix_console.UnixConsole()
         reader = pyrepl.reader.Reader(console)
         reader.ps1 = "foo$"
         reader.prepare()
         reader.restore() # Don't screw up terminal
-        console.width = 10
+        reader.console.width = 10
         reader.buffer = list("01234567890123456789")
-        lines = reader.calc_screen()
-        self.assertEquals(lines,
-                          ["foo$01234\\", "567890123\\", "456789"])
+        return reader
+
+    def check_output(self, reader, lines):
         for line in lines[:-1]:
-            self.assertEquals(len(line), console.width)
+            self.assertEquals(len(line), reader.console.width)
         # Check cursor position consistency.
         for index, char in enumerate("".join(reader.buffer)):
             x, y = reader.pos2xy(index)
             self.assertEquals(lines[y][x], char)
+
+    def test_wrapping(self):
+        reader = self.make_example_reader()
+        lines = reader.calc_screen()
+        self.assertEquals(lines,
+                          ["foo$01234\\", "567890123\\", "456789"])
+        self.check_output(reader, lines)
+
+    def test_wrapping_without_backslashes(self):
+        reader = self.make_example_reader()
+        reader.wrap_marker = ""
+        lines = reader.calc_screen()
+        self.assertEquals(lines,
+                          ["foo$012345", "6789012345", "6789"])
+        self.check_output(reader, lines)
 
 
 if __name__ == "__main__":

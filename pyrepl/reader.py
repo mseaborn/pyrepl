@@ -249,6 +249,7 @@ feeling more loquacious than I am now."""
             self.keymap,
             invalid_cls='invalid-key',
             character_cls='self-insert')
+        self.wrap_marker = "\\"
 
     def collect_keymap(self):
         return default_keymap
@@ -262,7 +263,7 @@ feeling more loquacious than I am now."""
         lines = self.get_unicode().split("\n")
         screen = []
         screeninfo = []
-        w = self.console.width - 1
+        w = self.console.width - len(self.wrap_marker)
         p = self.pos
         for ln, line in zip(range(len(lines)), lines):
             ll = len(line)
@@ -281,10 +282,10 @@ feeling more loquacious than I am now."""
                 screen.append(prompt + l)
                 screeninfo.append((lp, l2+[1]))
             else:
-                screen.append(prompt + l[:w-lp] + "\\")
+                screen.append(prompt + l[:w-lp] + self.wrap_marker)
                 screeninfo.append((lp, l2[:w-lp]))
                 for i in range(-lp + w, -lp + wrapcount*w, w):
-                    screen.append(l[i:i+w] +  "\\")
+                    screen.append(l[i:i+w] + self.wrap_marker)
                     screeninfo.append((0, l2[i:i + w]))
                 screen.append(l[wrapcount*w - lp:])
                 screeninfo.append((0, l2[wrapcount*w - lp:]+[1]))
