@@ -34,8 +34,8 @@ class TestWrappingLongLines(unittest.TestCase):
         return reader
 
     def check_output(self, reader, lines):
-        for line in lines[:-1]:
-            self.assertEquals(len(line), reader.console.width)
+        for line in lines:
+            assert len(line) <= reader.console.width
         # Check cursor position consistency.
         for index, char in enumerate("".join(reader.buffer)):
             x, y = reader.pos2xy(index)
@@ -64,6 +64,31 @@ class TestWrappingLongLines(unittest.TestCase):
         self.assertEquals(lines,
                           ["0123456789",
                            "foo$012345", "6789012345", "6789"])
+        self.check_output(reader, lines)
+
+    def test_wrapping_status_message(self):
+        reader = self.make_example_reader()
+        reader.msg = "status1status2status3status4"
+        lines = reader.calc_screen()
+        self.assertEquals(lines,
+                          ["foo$01234\\", "567890123\\", "456789",
+                           "status1st\\", "atus2stat\\", "us3status\\", "4"])
+        self.check_output(reader, lines)
+
+        reader.msg_at_bottom = False
+        lines = reader.calc_screen()
+        self.assertEquals(lines,
+                          ["status1st\\", "atus2stat\\", "us3status\\", "4",
+                           "foo$01234\\", "567890123\\", "456789"])
+        self.check_output(reader, lines)
+
+        # There should be no empty line when the message exactly fills
+        # the last line.
+        reader.msg = "status1status2status3status"
+        lines = reader.calc_screen()
+        self.assertEquals(lines,
+                          ["status1st\\", "atus2stat\\", "us3status",
+                           "foo$01234\\", "567890123\\", "456789"])
         self.check_output(reader, lines)
 
 

@@ -263,21 +263,34 @@ feeling more loquacious than I am now."""
         lines = self.get_unicode().split("\n")
         screen = []
         screeninfo = []
+
+        def put_line(text):
+            screen.append(text)
+            screeninfo.append((0, []))
+
+        def put_line_wrapped(text):
+            i = 0
+            while len(text) - i > w:
+                put_line(text[i:i+w] + self.wrap_marker)
+                i += w
+            put_line(text[i:])
+
+        def put_lines_wrapped(text):
+            for logical_line in text.split("\n"):
+                put_line_wrapped(logical_line)
+
         w = self.console.width - len(self.wrap_marker)
         p = self.pos
         for ln, line in zip(range(len(lines)), lines):
             ll = len(line)
             if 0 <= p <= ll:
                 if self.msg and not self.msg_at_bottom:
-                    for mline in self.msg.split("\n"):
-                        screen.append(mline)
-                        screeninfo.append((0, []))
+                    put_lines_wrapped(self.msg)
                 self.lxy = p, ln
             prompt = self.get_prompt(ln, ll >= p >= 0)
             p -= ll + 1
             while len(prompt) >= w:
-                screen.append(prompt[:w] + self.wrap_marker)
-                screeninfo.append((0, []))
+                put_line(prompt[:w] + self.wrap_marker)
                 prompt = prompt[w:]
             lp = len(prompt)
             l, l2 = disp_str(line)
@@ -296,9 +309,7 @@ feeling more loquacious than I am now."""
         self.screeninfo = screeninfo
         self.cxy = self.pos2xy(self.pos)
         if self.msg and self.msg_at_bottom:
-            for mline in self.msg.split("\n"):
-                screen.append(mline)
-                screeninfo.append((0, []))
+            put_lines_wrapped(self.msg)
         return screen
 
     def bow(self, p=None):
