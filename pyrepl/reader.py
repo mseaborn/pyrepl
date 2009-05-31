@@ -275,6 +275,10 @@ feeling more loquacious than I am now."""
                 self.lxy = p, ln
             prompt = self.get_prompt(ln, ll >= p >= 0)
             p -= ll + 1
+            while len(prompt) >= w:
+                screen.append(prompt[:w] + self.wrap_marker)
+                screeninfo.append((0, []))
+                prompt = prompt[w:]
             lp = len(prompt)
             l, l2 = disp_str(line)
             wrapcount = (len(l) + lp) / w

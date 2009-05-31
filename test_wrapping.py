@@ -56,6 +56,16 @@ class TestWrappingLongLines(unittest.TestCase):
                           ["foo$012345", "6789012345", "6789"])
         self.check_output(reader, lines)
 
+    def test_wrapping_long_prompts(self):
+        reader = self.make_example_reader()
+        reader.wrap_marker = ""
+        reader._ps1 = "0123456789foo$"
+        lines = reader.calc_screen()
+        self.assertEquals(lines,
+                          ["0123456789",
+                           "foo$012345", "6789012345", "6789"])
+        self.check_output(reader, lines)
+
 
 if __name__ == "__main__":
     unittest.main()
