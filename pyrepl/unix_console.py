@@ -155,6 +155,8 @@ class UnixConsole(Console):
         self.event_queue = unix_eventqueue.EventQueue(self.input_fd)
         self.partial_char = ''
         self.cursor_visible = 1
+        self.width = 80
+        self.height = 25
 
     def change_encoding(self, encoding):
         self.encoding = encoding
@@ -361,7 +363,7 @@ class UnixConsole(Console):
             tcsetattr(self.input_fd, termios.TCSADRAIN, raw)
 
         self.screen = []
-        self.height, self.width = self.getheightwidth()
+        self._update_size()
 
         self.__buffer = []
         
@@ -384,7 +386,7 @@ class UnixConsole(Console):
         signal.signal(signal.SIGWINCH, self.old_sigwinch)
 
     def __sigwinch(self, signum, frame):
-        self.height, self.width = self.getheightwidth()
+        self._update_size()
         self.event_queue.insert(Event('resize', None))
 
     def push_char(self, char):
@@ -450,6 +452,9 @@ class UnixConsole(Console):
             self.__move(0, self.__offset)
             ns = self.height*['\000'*self.width]
             self.screen = ns
+
+    def _update_size(self):
+        self.height, self.width = self.getheightwidth()
 
     if TIOCGWINSZ:
         def getheightwidth(self):
