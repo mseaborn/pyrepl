@@ -47,6 +47,7 @@ _keynames = {
 _ad_hoc_codes = {
     "\x1b[1;5D": "c-left",
     "\x1b[1;5C": "c-right",
+    "\x7f": "backspace",
     }
 
 class EventQueue(object):
