@@ -76,7 +76,9 @@ class UnixConsole(Console):
             
         self.encoding = encoding
 
-        if isinstance(f_in, int):
+        if f_in is None:
+            self.input_fd = None
+        elif isinstance(f_in, int):
             self.input_fd = f_in
         else:
             self.input_fd = f_in.fileno()
@@ -86,8 +88,9 @@ class UnixConsole(Console):
         else:
             self.output_fd = f_out.fileno()
         
-        self.pollob = poll()
-        self.pollob.register(self.input_fd, POLLIN)
+        if self.input_fd is not None:
+            self.pollob = poll()
+            self.pollob.register(self.input_fd, POLLIN)
         curses.setupterm(term, self.output_fd)
         self.term = term
         
@@ -343,18 +346,19 @@ class UnixConsole(Console):
 
     def prepare(self):
         # per-readline preparations:
-        self.__svtermstate = tcgetattr(self.input_fd)
-        raw = self.__svtermstate.copy()
-        raw.iflag &=~ (termios.BRKINT | termios.INPCK |
-                       termios.ISTRIP | termios.IXON)
-        raw.oflag &=~ (termios.OPOST)
-        raw.cflag &=~ (termios.CSIZE|termios.PARENB)
-        raw.cflag |=  (termios.CS8)
-        raw.lflag &=~ (termios.ICANON|termios.ECHO|
-                       termios.IEXTEN|(termios.ISIG*1))
-        raw.cc[termios.VMIN] = 1
-        raw.cc[termios.VTIME] = 0
-        tcsetattr(self.input_fd, termios.TCSADRAIN, raw)
+        if self.input_fd is not None:
+            self.__svtermstate = tcgetattr(self.input_fd)
+            raw = self.__svtermstate.copy()
+            raw.iflag &=~ (termios.BRKINT | termios.INPCK |
+                           termios.ISTRIP | termios.IXON)
+            raw.oflag &=~ (termios.OPOST)
+            raw.cflag &=~ (termios.CSIZE|termios.PARENB)
+            raw.cflag |=  (termios.CS8)
+            raw.lflag &=~ (termios.ICANON|termios.ECHO|
+                           termios.IEXTEN|(termios.ISIG*1))
+            raw.cc[termios.VMIN] = 1
+            raw.cc[termios.VTIME] = 0
+            tcsetattr(self.input_fd, termios.TCSADRAIN, raw)
 
         self.screen = []
         self.height, self.width = self.getheightwidth()
@@ -374,7 +378,8 @@ class UnixConsole(Console):
     def restore(self):
         self.__maybe_write_code(self._rmkx)
         self.flushoutput()
-        tcsetattr(self.input_fd, termios.TCSADRAIN, self.__svtermstate)
+        if self.input_fd is not None:
+            tcsetattr(self.input_fd, termios.TCSADRAIN, self.__svtermstate)
 
         signal.signal(signal.SIGWINCH, self.old_sigwinch)
 
@@ -521,11 +526,12 @@ class UnixConsole(Console):
                 e.data += e2.data
                 e.raw += e.raw
                 
-            amount = struct.unpack(
-                "i", ioctl(self.input_fd, FIONREAD, "\0\0\0\0"))[0]
-            raw = unicode(os.read(self.input_fd, amount), self.encoding, 'replace')
-            e.data += raw
-            e.raw += raw
+            if self.input_fd is not None:
+                amount = struct.unpack(
+                    "i", ioctl(self.input_fd, FIONREAD, "\0\0\0\0"))[0]
+                raw = unicode(os.read(self.input_fd, amount), self.encoding, 'replace')
+                e.data += raw
+                e.raw += raw
             return e
     else:
         def getpending(self):

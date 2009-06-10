@@ -56,7 +56,8 @@ class EventQueue(object):
             keycode = curses.tigetstr(tiname)
             if keycode:
                 our_keycodes[keycode] = unicode(key)
-        our_keycodes[tcgetattr(fd)[6][VERASE]] = u'backspace'
+        if fd is not None:
+            our_keycodes[tcgetattr(fd)[6][VERASE]] = u'backspace'
         our_keycodes.update(_ad_hoc_codes)
         self.k = self.ck = keymap.compile_keymap(our_keycodes)
         self.events = []
