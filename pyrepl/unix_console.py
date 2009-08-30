@@ -71,6 +71,7 @@ POLLIN = getattr(select, "POLLIN", None)
 
 class UnixConsole(Console):
     def __init__(self, f_in=0, f_out=1, term=None, encoding=None):
+        self.soft_wrap = True
         if encoding is None:
             encoding = sys.getdefaultencoding()
             
@@ -228,11 +229,14 @@ class UnixConsole(Console):
 
         self.__offset = offset
 
-        for y, oldline, newline, in zip(range(offset, offset + height),
-                                        oldscr,
-                                        newscr):
-            if oldline != newline:
-                self.__write_changed_line(y, oldline, newline, px)
+        if self.soft_wrap:
+            self.__write_all(offset, newscr)
+        else:
+            for y, oldline, newline, in zip(range(offset, offset + height),
+                                            oldscr,
+                                            newscr):
+                if oldline != newline:
+                    self.__write_changed_line(y, oldline, newline, px)
                 
         y = len(newscr)
         while y < len(oldscr):
@@ -247,6 +251,24 @@ class UnixConsole(Console):
         self.screen = screen
         self.move_cursor(cx, cy)
         self.flushoutput()
+
+    def __write_all(self, y, lines):
+        # Get the terminal to store soft newlines by not outputting
+        # newlines when a line has wrapped.  But we cheat by assuming
+        # a soft newline for any screen-width line.
+        self.__hide_cursor()
+        self.__move(0, y)
+        for line in lines:
+            self.__write(line)
+            if len(line) < self.width:
+                if len(line) == 0 and self.__posxy[0] != 0:
+                    self.__write("\n\r")
+                self.__write_code(self._el) # Clear to end of line
+                self.__write("\n\r")
+                self.__posxy = (0, y + 1)
+            else:
+                self.__posxy = (self.width, y)
+            y += 1
 
     def __write_changed_line(self, y, oldline, newline, px):
         # this is frustrating; there's no reason to test (say)
