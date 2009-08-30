@@ -258,16 +258,15 @@ class UnixConsole(Console):
         # a soft newline for any screen-width line.
         self.__hide_cursor()
         self.__move(0, y)
+        ready = True
         for line in lines:
-            self.__write(line)
-            if len(line) < self.width:
-                if len(line) == 0 and self.__posxy[0] != 0:
-                    self.__write("\n\r")
-                self.__write_code(self._el) # Clear to end of line
+            if not ready or (len(line) == 0 and self.__posxy[0] != 0):
                 self.__write("\n\r")
-                self.__posxy = (0, y + 1)
-            else:
-                self.__posxy = (self.width, y)
+            self.__write(line)
+            ready = len(line) == self.width
+            if not ready:
+                self.__write_code(self._el) # Clear to end of line
+            self.__posxy = (len(line), y)
             y += 1
 
     def __write_changed_line(self, y, oldline, newline, px):

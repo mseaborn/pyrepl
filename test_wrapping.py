@@ -180,6 +180,22 @@ class TestUnixConsole(unittest.TestCase):
                           "\n\n0123456789a" + "\n" * 7)
         self.assertEquals(terminal.get_cursor_position(), (0, 2))
 
+    def test_bottom_of_screen(self):
+        # We should be able to write in the bottom line of the screen.
+        terminal = vte.Terminal()
+        terminal.set_size(10, 10)
+        console = VTEConsole(terminal)
+        console.width = 10
+        console.height = 10
+        console.prepare()
+        terminal.feed("\n" * 20)
+        console.refresh(["hello"], (0, 0))
+        self.assertEquals(get_vte_text(terminal),
+                          "\n" * 9 + "hello\n")
+        console.refresh(["hello", ""], (0, 0))
+        self.assertEquals(get_vte_text(terminal),
+                          "\n" * 8 + "hello\n\n")
+
 
 if __name__ == "__main__":
     unittest.main()
