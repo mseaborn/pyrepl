@@ -494,7 +494,8 @@ class UnixConsole(Console):
                 return 25, 80
 
     def forgetinput(self):
-        termios.tcflush(self.input_fd, termios.TCIFLUSH)
+        if self.input_fd is not None:
+            termios.tcflush(self.input_fd, termios.TCIFLUSH)
 
     def flushoutput(self):
         for text, iscode in self.__buffer:
